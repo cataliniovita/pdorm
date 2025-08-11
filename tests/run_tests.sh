@@ -59,9 +59,15 @@ record() {
   [[ -f /tmp/resp.code ]] && code=$(cat /tmp/resp.code)
   tmp=$(mktemp)
   # Store raw body regardless of JSON validity and the HTTP status code
-  jq --arg k "$key" --arg code "$code" --rawfile body /tmp/resp.json \
-     '. + {($k): {http_code: ($code|tonumber), body: $body}}' \
-     "$REPORT_JSON" > "$tmp" && mv "$tmp" "$REPORT_JSON"
+  if jq --arg k "$key" --arg code "$code" --rawfile body /tmp/resp.json \
+       '. + {($k): {http_code: ($code|tonumber), body: $body}}' \
+       "$REPORT_JSON" > "$tmp"; then
+    mv "$tmp" "$REPORT_JSON"
+  else
+    # Fallback: do not break the run, append a line-delimited JSON entry
+    echo "{\"key\":\"$key\",\"http_code\":$code,\"body\":$(jq -Rs . /tmp/resp.json)}" >> /workspace/out/vuln-report.ndjson || true
+    rm -f "$tmp" || true
+  fi
 }
 
 assess() {
