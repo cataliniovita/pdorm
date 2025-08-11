@@ -51,12 +51,13 @@ record() {
   local service=$1
   local endpoint=$2
   local payload=$3
-  local response=$4
+  local _unused_response=$4
   local key="${service}_${endpoint//\//_}_${payload}"
   # shrink key
   key=$(echo "$key" | tr -cd '[:alnum:]_-' | cut -c1-80)
   tmp=$(mktemp)
-  jq --arg k "$key" --argjson v "$response" '. + {($k): $v}' "$REPORT_JSON" > "$tmp" && mv "$tmp" "$REPORT_JSON"
+  # Read JSON directly from the file to avoid shell quoting/encoding issues
+  jq --arg k "$key" --slurpfile v /tmp/resp.json '. + {($k): $v[0]}' "$REPORT_JSON" > "$tmp" && mv "$tmp" "$REPORT_JSON"
 }
 
 assess() {
