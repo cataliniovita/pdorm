@@ -1,0 +1,242 @@
+version: '3.9'
+
+name: sqli-multilang-lab
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: sqli-lab-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: demo
+      MYSQL_USER: app
+      MYSQL_PASSWORD: apppass
+    command: ["--default-authentication-plugin=mysql_native_password", "--log_bin_trust_function_creators=1"]
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootpass"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  php-pdo-emulate:
+    build: ./php-pdo-emulate
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+      PDO_EMULATE: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  php-pdo-native:
+    build: ./php-pdo-native
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+      PDO_EMULATE: "0"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  node-mysql2:
+    build: ./node-mysql2
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  node-knex:
+    build: ./node-knex
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  node-sequelize:
+    build: ./node-sequelize
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  python-mysql-connector:
+    build: ./python-mysql-connector
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  python-sqlalchemy:
+    build: ./python-sqlalchemy
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  java-jdbc:
+    build: ./java-jdbc
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  java-spring-boot:
+    build: ./java-spring-boot
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  ruby-activerecord:
+    build: ./ruby-activerecord
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4567/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks:
+      - internal
+
+  attacker:
+    build: ./attacker
+    depends_on:
+      php-pdo-emulate:
+        condition: service_healthy
+      php-pdo-native:
+        condition: service_healthy
+      node-mysql2:
+        condition: service_healthy
+      node-knex:
+        condition: service_healthy
+      node-sequelize:
+        condition: service_healthy
+      python-mysql-connector:
+        condition: service_healthy
+      python-sqlalchemy:
+        condition: service_healthy
+      java-jdbc:
+        condition: service_healthy
+      java-spring-boot:
+        condition: service_healthy
+      ruby-activerecord:
+        condition: service_healthy
+    working_dir: /workspace
+    volumes:
+      - ./tests:/workspace/tests:ro
+      - ./:/workspace/out
+    networks:
+      - internal
+    command: ["bash", "/workspace/tests/run_tests.sh"]
+
+networks:
+  internal:
+    driver: bridge
+
+
