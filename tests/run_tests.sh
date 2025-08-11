@@ -55,9 +55,13 @@ record() {
   local key="${service}_${endpoint//\//_}_${payload}"
   # shrink key
   key=$(echo "$key" | tr -cd '[:alnum:]_-' | cut -c1-80)
+  local code="0"
+  [[ -f /tmp/resp.code ]] && code=$(cat /tmp/resp.code)
   tmp=$(mktemp)
-  # Read JSON directly from the file to avoid shell quoting/encoding issues
-  jq --arg k "$key" --slurpfile v /tmp/resp.json '. + {($k): $v[0]}' "$REPORT_JSON" > "$tmp" && mv "$tmp" "$REPORT_JSON"
+  # Store raw body regardless of JSON validity and the HTTP status code
+  jq --arg k "$key" --arg code "$code" --rawfile body /tmp/resp.json \
+     '. + {($k): {http_code: ($code|tonumber), body: $body}}' \
+     "$REPORT_JSON" > "$tmp" && mv "$tmp" "$REPORT_JSON"
 }
 
 assess() {
