@@ -1,9 +1,10 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY pom.xml .
-RUN mvn -q -e -DskipTests package || true
+# Clear cached failures and fetch deps with -U
+RUN rm -rf /root/.m2/repository && mvn -q -U -DskipTests dependency:go-offline
 COPY src /src/src
-RUN mvn -q -DskipTests package && cp target/java-spring-boot-*.jar /app.jar
+RUN mvn -q -U -DskipTests package && cp target/java-spring-boot-*.jar /app.jar
 
 FROM eclipse-temurin:17-jre-alpine
 RUN apk add --no-cache curl
