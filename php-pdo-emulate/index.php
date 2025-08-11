@@ -70,14 +70,14 @@ function vuln_handler(): void {
     $name = $_GET['name'] ?? '';
     $col = $_GET['col'] ?? 'name';
 
-    // VULN: naive identifier escaping + emulated prepares
-    // Attempt to backtick-escape but allow special characters like '?' and null byte payloads that
-    // can confuse PDO's emulated prepare parser.
-    // The Assetnote technique uses identifier interpolation containing '?' plus trailing comment/null byte
-    // so PDO counts extra placeholders and truncates/rewrites the query before sending to MySQL, enabling SQLi.
-    $sanitized = str_replace('`', '``', (string)$col);
-    // Intentionally do NOT remove question marks or comments; PDO emulation will misparse these.
-    $sql = "SELECT `{$sanitized}` FROM fruit WHERE name = ?";
+    // VULN: emulate-prepares parser confusion by interpolating the identifier WITHOUT quoting.
+    // This intentionally reflects the class of bugs where placeholders in identifiers/comments are
+    // parsed client-side by PDO emulation. Supplying col like "? #\0" may alter how PDO splits binds.
+    // DO NOT do this in production. Identifiers must be whitelisted and quoted.
+    $raw = (string)$col;
+    // Minimal sanitation to avoid backtick syntax collisions while still demonstrating parser issues
+    $raw = str_replace('`', '', $raw);
+    $sql = "SELECT {$raw} FROM fruit WHERE name = ?";
 
     try {
         $stmt = $pdo->prepare($sql);
