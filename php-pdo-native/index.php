@@ -51,13 +51,13 @@ function safe_handler(): void {
 
 function vuln_handler(): void {
     $pdo = get_pdo();
-    $name = $_GET['name'] ?? '';
-    $col = $_GET['col'] ?? 'name';
-    $sanitized = str_replace('`', '``', (string)$col);
-    $sql = "SELECT `{$sanitized}` FROM fruit WHERE name = ?";
+    $col = '`' . str_replace('`', '``', $_GET['col']) . '`';
+
+    $sql = "SELECT $col FROM fruit WHERE name = ?";
+
     try {
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$name]);
+        $stmt->execute([$_GET['name']]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         json_response(['mode' => $pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES) ? 'emulate' : 'native', 'query' => $sql, 'rows' => $rows]);
     } catch (Throwable $e) {

@@ -67,18 +67,11 @@ function safe_handler(): void {
 
 function vuln_handler(): void {
     $pdo = get_pdo();
-    $name = $_GET['name'] ?? '';
-    $col = $_GET['col'] ?? 'name';
+    $name = $_GET['name'];
+    $col = '`' . str_replace('`', '``', $_GET['col']) . '`';
 
-    // VULN: emulate-prepares parser confusion by interpolating the identifier WITHOUT quoting.
-    // This intentionally reflects the class of bugs where placeholders in identifiers/comments are
-    // parsed client-side by PDO emulation. Supplying col like "? #\0" may alter how PDO splits binds.
-    // DO NOT do this in production. Identifiers must be whitelisted and quoted.
-    $raw = (string)$col;
-    // Minimal sanitation to avoid backtick syntax collisions while still demonstrating parser issues
-    $raw = str_replace('`', '', $raw);
-    $sql = "SELECT {$raw} FROM fruit WHERE name = ?";
-
+    $sql = "SELECT $col FROM fruit WHERE name = ?";
+    
     try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$name]);
