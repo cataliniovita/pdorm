@@ -286,6 +286,7 @@ services:
     working_dir: /workspace
     volumes:
       - ./tests:/workspace/tests:ro
+      - ./fuzz_scripts:/workspace/fuzz_scripts:ro
       - ./:/workspace/out
     networks:
       - internal
