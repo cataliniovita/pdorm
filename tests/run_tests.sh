@@ -13,6 +13,7 @@ BASES=(
   "java-jdbc:8080"
   "java-spring-boot:8080"
   "ruby-activerecord:4567"
+  "ruby-pg:4567"
 )
 
 PAYLOADS=(
