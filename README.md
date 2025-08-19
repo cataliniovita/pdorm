@@ -37,6 +37,7 @@ Outputs will be written to:
 
 - `report.md`
 - `vuln-report.json`
+ - `fuzz-pymysql.ndjson` / `.json` / `.md` (when running the fuzzer)
 
 ### Add a new service
 

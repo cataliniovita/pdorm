@@ -14,6 +14,8 @@ BASES=(
   "java-spring-boot:8080"
   "ruby-activerecord:4567"
   "ruby-pg:4567"
+  "go-mysql-native:8080"
+  "go-mysql-emulate:8080"
 )
 
 PAYLOADS=(

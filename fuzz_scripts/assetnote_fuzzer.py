@@ -19,6 +19,8 @@ SERVICES = [
     ("java-spring-boot", "8080", "/vuln", "mysql"),
     ("ruby-activerecord", "4567", "/vuln", "mysql"),
     ("ruby-pg", "4567", "/vuln", "postgres"),
+    ("go-mysql-native", "8080", "/vuln", "mysql"),
+    ("go-mysql-emulate", "8080", "/vuln", "mysql"),
 ]
 
 

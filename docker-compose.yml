@@ -260,6 +260,48 @@ services:
     networks:
       - internal
 
+  go-mysql-native:
+    build: ./go-mysql-native
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "8091:8080"
+    networks:
+      - internal
+
+  go-mysql-emulate:
+    build: ./go-mysql-emulate
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+      INTERPOLATE: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "8092:8080"
+    networks:
+      - internal
+
+
   attacker:
     build: ./attacker
     depends_on:
@@ -282,6 +324,10 @@ services:
       java-spring-boot:
         condition: service_healthy
       ruby-activerecord:
+        condition: service_healthy
+      go-mysql-native:
+        condition: service_healthy
+      go-mysql-emulate:
         condition: service_healthy
     working_dir: /workspace
     volumes:
