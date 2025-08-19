@@ -41,7 +41,7 @@ def vuln():
     col = str(request.args.get('col', 'name'))
     # VULN: f-string identifier interpolation into text(); values still bound
     sanitized = col.replace('`', '``')
-    sql = text(f"SELECT `{sanitized}` AS val FROM fruit WHERE name = :name")
+    sql = text(f"SELECT {sanitized} AS val FROM fruit WHERE name = :name")
     try:
         with engine.connect() as conn:
             rows = conn.execute(sql, { 'name': name }).mappings().all()
