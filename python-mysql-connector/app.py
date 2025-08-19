@@ -39,7 +39,7 @@ def safe():
     sql = f"SELECT `{col}` AS val FROM fruit WHERE name = %s"
     try:
         conn = get_conn()
-        cur = conn.cursor(dictionary=True)
+        cur = conn.cursor()
         cur.execute(sql, (name,))
         rows = cur.fetchall()
         cur.close(); conn.close()
@@ -56,7 +56,7 @@ def vuln():
     sql = f"SELECT `{sanitized}` AS val FROM fruit WHERE name = %s"
     try:
         conn = get_conn()
-        cur = conn.cursor(dictionary=True)
+        cur = conn.cursor()
         cur.execute(sql, (name,))
         rows = cur.fetchall()
         cur.close(); conn.close()
