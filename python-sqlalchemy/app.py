@@ -38,10 +38,10 @@ def safe():
 @app.get('/vuln')
 def vuln():
     name = request.args.get('name', '')
-    col = str(request.args.get('col', 'name'))
-    # VULN: f-string identifier interpolation into text(); values still bound
-    sanitized = col.replace('`', '``')
-    sql = text(f"SELECT {sanitized} AS val FROM fruit WHERE name = :name")
+    col = request.args.get('col', '')
+    col = '`' + col.replace('`', '``') + '`'
+
+    sql = text(f"SELECT {col} AS val FROM fruit WHERE name = :name")
     try:
         with engine.connect() as conn:
             rows = conn.execute(sql, { 'name': name }).mappings().all()
