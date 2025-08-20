@@ -5,7 +5,7 @@ RUN go mod download
 COPY . .
 # Ensure go.sum is generated for all deps
 RUN go mod tidy
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$(if [[ $(uname -m) == "aarch64" ]]; then echo arm64; else echo amd64; fi) go build -o server ./main.go
 
 FROM alpine:3.19
 RUN apk add --no-cache ca-certificates curl
