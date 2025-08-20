@@ -260,6 +260,26 @@ services:
     networks:
       - internal
 
+  php-laravel-qb:
+    build: ./php-laravel-qb
+    environment:
+      DB_HOST: db
+      DB_NAME: demo
+      DB_USER: app
+      DB_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "8085:8080"
+    networks:
+      - internal
+
   go-mysql-native:
     build: ./go-mysql-native
     environment:
@@ -324,6 +344,8 @@ services:
       java-spring-boot:
         condition: service_healthy
       ruby-activerecord:
+        condition: service_healthy
+      php-laravel-qb:
         condition: service_healthy
       go-mysql-native:
         condition: service_healthy

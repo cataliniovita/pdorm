@@ -16,6 +16,7 @@ BASES=(
   "ruby-pg:4567"
   "go-mysql-native:8080"
   "go-mysql-emulate:8080"
+  "php-laravel-qb:8080"
 )
 
 PAYLOADS=(

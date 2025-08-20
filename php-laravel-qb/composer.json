@@ -1,0 +1,10 @@
+{
+  "name": "lab/php-laravel-qb",
+  "require": {
+    "illuminate/database": "^10.0",
+    "illuminate/events": "^10.0"
+  },
+  "minimum-stability": "stable"
+}
+
+
