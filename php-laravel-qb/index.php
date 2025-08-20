@@ -45,11 +45,13 @@ if ($uri === '/safe') {
         json_response(['error' => 'invalid column'], 400); exit;
     }
     // Safe: whitelist identifier; bind value
-    $rows = Capsule::table('fruit')
+    $qb = Capsule::table('fruit')
         ->selectRaw("`$col` AS val")
-        ->where('name', '=', $name)
-        ->get();
-    json_response(['rows' => $rows]);
+        ->where('name', '=', $name);
+    $sql = $qb->toSql();
+    $bindings = $qb->getBindings();
+    $rows = $qb->get();
+    json_response(['sql' => $sql, 'bindings' => $bindings, 'rows' => $rows]);
     exit;
 }
 
@@ -59,13 +61,15 @@ if ($uri === '/vuln') {
     // VULN: naive backtick escaping of identifier + bound value in where
     $sanitized = str_replace('`', '``', $col);
     try {
-        $rows = Capsule::table('fruit')
+        $qb = Capsule::table('fruit')
             ->selectRaw("`$sanitized` AS val")
-            ->where('name', '=', $name) // value still bound by QB
-            ->get();
-        json_response(['query' => "SELECT `$sanitized` AS val FROM fruit WHERE name = ?", 'rows' => $rows]);
+            ->where('name', '=', $name); // value still bound by QB
+        $sql = $qb->toSql();
+        $bindings = $qb->getBindings();
+        $rows = $qb->get();
+        json_response(['sql' => $sql, 'bindings' => $bindings, 'rows' => $rows]);
     } catch (Throwable $e) {
-        json_response(['query' => "SELECT `$sanitized` AS val FROM fruit WHERE name = ?", 'error' => $e->getMessage()], 500);
+        json_response(['error' => $e->getMessage()], 500);
     }
     exit;
 }
