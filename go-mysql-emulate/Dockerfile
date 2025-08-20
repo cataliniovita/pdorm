@@ -3,6 +3,8 @@ WORKDIR /app
 COPY go.mod ./
 RUN go mod download
 COPY . .
+# Ensure go.sum is generated for all deps
+RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./main.go
 
 FROM alpine:3.19
