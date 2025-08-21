@@ -7,7 +7,8 @@ import urllib.request
 from pathlib import Path
 
 
-SERVICES = [
+# Container-internal ports (used from attacker container)
+INTERNAL_SERVICES = [
     ("php-pdo-emulate", "8080", "/vuln", "mysql"),
     ("php-pdo-native", "8080", "/vuln", "mysql"),
     ("node-mysql2", "3000", "/vuln", "mysql"),
@@ -21,6 +22,25 @@ SERVICES = [
     ("ruby-pg", "4567", "/vuln", "postgres"),
     ("go-mysql-native", "8080", "/vuln", "mysql"),
     ("go-mysql-emulate", "8080", "/vuln", "mysql"),
+    ("php-laravel-qb", "8080", "/vuln", "mysql"),
+]
+
+# Host-exposed ports (used from host machine)
+HOST_SERVICES = [
+    ("php-pdo-emulate", "8081", "/vuln", "mysql"),
+    ("php-pdo-native", "8082", "/vuln", "mysql"),
+    ("node-mysql2", "3001", "/vuln", "mysql"),
+    ("node-knex", "3002", "/vuln", "mysql"),
+    ("node-sequelize", "3003", "/vuln", "mysql"),
+    ("python-mysql-connector", "5001", "/vuln", "mysql"),
+    ("python-sqlalchemy", "5002", "/vuln", "mysql"),
+    ("java-jdbc", "8083", "/vuln", "mysql"),
+    ("java-spring-boot", "8084", "/vuln", "mysql"),
+    ("ruby-activerecord", "4568", "/vuln", "mysql"),
+    ("ruby-pg", "4569", "/vuln", "postgres"),
+    ("go-mysql-native", "8091", "/vuln", "mysql"),
+    ("go-mysql-emulate", "8092", "/vuln", "mysql"),
+    ("php-laravel-qb", "8085", "/vuln", "mysql"),
 ]
 
 
@@ -90,7 +110,7 @@ def has_indicator(http_code: int, body: str, benign: bool):
     return False
 
 
-def run(base_dir: str, out_dir: Path):
+def run(base_dir: str, out_dir: Path, services):
     out_dir.mkdir(parents=True, exist_ok=True)
     ndjson = out_dir / "assetnote-fuzz.ndjson"
     jpath = out_dir / "assetnote-fuzz.json"
@@ -98,7 +118,7 @@ def run(base_dir: str, out_dir: Path):
     results = []
 
     with ndjson.open("w", encoding="utf-8") as nd:
-        for svc, port, ep, dialect in SERVICES:
+        for svc, port, ep, dialect in services:
             base = f"{svc}:{port}"
             for tag, enc in payloads_for(dialect):
                 benign = tag.endswith("benign")
@@ -143,8 +163,10 @@ def run(base_dir: str, out_dir: Path):
 def main():
     parser = argparse.ArgumentParser(description="Fuzz all services with Assetnote-style identifier payloads")
     parser.add_argument("--out-dir", default="/workspace/out", help="output directory")
+    parser.add_argument("--ports", choices=["internal", "host"], default="internal", help="use container-internal or host-exposed ports")
     args = parser.parse_args()
-    run("/workspace", Path(args.out_dir))
+    services = INTERNAL_SERVICES if args.ports == "internal" else HOST_SERVICES
+    run("/workspace", Path(args.out_dir), services)
 
 
 if __name__ == "__main__":
