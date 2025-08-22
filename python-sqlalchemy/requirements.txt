@@ -1,4 +1,4 @@
-Flask
-SQLAlchemy
-mysqlclient
-psycopg[binary]
+Flask==3.0.3
+SQLAlchemy==2.0.31
+mysqlclient==2.2.4
+psycopg2==2.9.10
