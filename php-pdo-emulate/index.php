@@ -43,6 +43,10 @@ function route(): void {
         vuln_handler();
         return;
     }
+    if ($uri === '/vuln-pg') {
+        vuln_pg_handler();
+        return;
+    }
     json_response([ 'error' => 'not found' ], 404);
 }
 
@@ -87,6 +91,30 @@ function vuln_handler(): void {
             'query' => $sql,
             'error' => $e->getMessage(),
         ], 500);
+    }
+}
+
+function vuln_pg_handler(): void {
+    // Connect to Postgres and run vulnerable identifier interpolation
+    $host = getenv('PG_HOST') ?: 'pg';
+    $db   = getenv('PG_DB') ?: 'demopg';
+    $user = getenv('PG_USER') ?: 'app';
+    $pass = getenv('PG_PASS') ?: 'apppass';
+    $dsn = "pgsql:host={$host};port=5432;dbname={$db}";
+    $pdo = new PDO($dsn, $user, $pass, [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION ]);
+
+    $name = $_GET['name'] ?? '';
+    $col = '`' . str_replace('`', '``', $_GET['col']) . '`';
+
+    try {
+        // PDO pgsql uses positional '?'
+        $sqlPdo = "SELECT $col FROM fruit WHERE name = ?";
+        $stmt = $pdo->prepare($sqlPdo);
+        $stmt->execute([$name]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        json_response(['query' => $sqlPdo, 'rows' => $rows]);
+    } catch (Throwable $e) {
+        json_response(['query' => $sql, 'error' => $e->getMessage()], 500);
     }
 }
 

@@ -1,5 +1,6 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
+import pg from 'pg';
 
 const app = express();
 const port = 3000;
@@ -11,6 +12,15 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'demo',
   waitForConnections: true,
   connectionLimit: 5
+});
+
+const pgPool = new pg.Pool({
+  host: process.env.PG_HOST || 'pg',
+  user: process.env.PG_USER || 'app',
+  password: process.env.PG_PASS || 'apppass',
+  database: process.env.PG_DB || 'demopg',
+  port: 5432,
+  max: 5
 });
 
 app.get('/health', async (req, res) => {
@@ -49,6 +59,20 @@ app.get('/vuln', async (req, res) => {
   const sql = `SELECT \`${sanitized}\` AS val FROM fruit WHERE name = ?`;
   try {
     const [rows] = await pool.execute(sql, [name]);
+    res.json({ query: sql, rows });
+  } catch (e) {
+    res.status(500).json({ query: sql, error: e.message });
+  }
+});
+
+app.get('/vuln-pg', async (req, res) => {
+  const name = req.query.name || '';
+  const col = String(req.query.col || 'name');
+  // VULN: naive identifier interpolation for Postgres (double quotes)
+  const sanitized = col.replace(/`/g, '``');
+  const sql = `SELECT "${sanitized}" AS val FROM users WHERE name = $1`;
+  try {
+    const { rows } = await pgPool.query(sql, [name]);
     res.json({ query: sql, rows });
   } catch (e) {
     res.status(500).json({ query: sql, error: e.message });

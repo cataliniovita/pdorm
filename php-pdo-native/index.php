@@ -33,6 +33,7 @@ function route(): void {
     }
     if ($uri === '/safe') { safe_handler(); return; }
     if ($uri === '/vuln') { vuln_handler(); return; }
+    if ($uri === '/vuln-pg') { vuln_pg_handler(); return; }
     json_response([ 'error' => 'not found' ], 404);
 }
 
@@ -62,6 +63,29 @@ function vuln_handler(): void {
         json_response(['mode' => $pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES) ? 'emulate' : 'native', 'query' => $sql, 'rows' => $rows]);
     } catch (Throwable $e) {
         json_response(['mode' => $pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES) ? 'emulate' : 'native', 'query' => $sql, 'error' => $e->getMessage()], 500);
+    }
+}
+
+function vuln_pg_handler(): void {
+    $host = getenv('PG_HOST') ?: 'pg';
+    $db   = getenv('PG_DB') ?: 'demopg';
+    $user = getenv('PG_USER') ?: 'app';
+    $pass = getenv('PG_PASS') ?: 'apppass';
+    $dsn = "pgsql:host={$host};port=5432;dbname={$db}";
+    $pdo = new PDO($dsn, $user, $pass, [ PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION ]);
+
+    $name = $_GET['name'] ?? '';
+
+    $col = '`' . str_replace('`', '``', $_GET['col']) . '`';
+    $sql = "SELECT $col AS val FROM users WHERE name = ?";
+    
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$name]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        json_response(['query' => $sql, 'rows' => $rows]);
+    } catch (Throwable $e) {
+        json_response(['query' => $sql, 'error' => $e->getMessage()], 500);
     }
 }
 
