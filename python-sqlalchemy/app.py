@@ -16,7 +16,7 @@ DB_NAME = os.getenv("DB_NAME", "demo")
 
 
 engine_pg = create_engine(
-    f"postgresql+psycopg://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}",
+    f"postgresql+psycopg://{PG_USER}:{PG_PASS}@{PG_HOST}:5432/{PG_DB}",
     pool_pre_ping=True,
 )
 
