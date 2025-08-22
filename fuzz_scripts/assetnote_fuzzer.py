@@ -16,6 +16,7 @@ INTERNAL_SERVICES = [
     ("node-sequelize", "3000", "/vuln", "mysql"),
     ("python-mysql-connector", "5000", "/vuln", "mysql"),
     ("python-sqlalchemy", "5000", "/vuln", "mysql"),
+    ("python-sqlalchemy-async", "5000", "/vuln", "postgres"),
     ("java-jdbc", "8080", "/vuln", "mysql"),
     ("java-spring-boot", "8080", "/vuln", "mysql"),
     ("ruby-activerecord", "4567", "/vuln", "mysql"),

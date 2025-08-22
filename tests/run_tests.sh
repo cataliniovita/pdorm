@@ -10,6 +10,7 @@ BASES=(
   "node-sequelize:3000"
   "python-mysql-connector:5000"
   "python-sqlalchemy:5000"
+  "python-sqlalchemy-async:5000"
   "java-jdbc:8080"
   "java-spring-boot:8080"
   "ruby-activerecord:4567"
