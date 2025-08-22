@@ -1,4 +1,4 @@
-\connect demo
+\connect demopg
 
 -- Clean slate (drop in dependency order)
 DROP VIEW IF EXISTS v_users_emails;
@@ -59,7 +59,7 @@ END $$;
 -- Grant privileges roughly equivalent to MySQL's:
 --   SELECT, INSERT, UPDATE, DELETE on all tables in demo.public
 -- Plus required sequence privileges so INSERTs on IDENTITY columns work.
-GRANT CONNECT ON DATABASE demo TO app;
+GRANT CONNECT ON DATABASE demopg TO app;
 GRANT USAGE, CREATE ON SCHEMA public TO app;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app;

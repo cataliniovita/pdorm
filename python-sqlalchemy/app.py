@@ -4,13 +4,19 @@ import os
 
 app = Flask(__name__)
 
+PG_HOST = os.getenv("PG_HOST", "pg")
+PG_USER = os.getenv("PG_USER", "app")
+PG_PASS = os.getenv("PG_PASS", "apppass")
+PG_DB = os.getenv("PG_DB", "demopg")
+
 DB_HOST = os.getenv("DB_HOST", "db")
 DB_USER = os.getenv("DB_USER", "app")
 DB_PASS = os.getenv("DB_PASS", "apppass")
 DB_NAME = os.getenv("DB_NAME", "demo")
 
+
 engine_pg = create_engine(
-    f"postgresql+psycopg://{DB_USER}:{DB_PASS}@{DB_HOST}:5432/{DB_NAME}",
+    f"postgresql+psycopg://{PG_USER}:{PG_PASS}@{PG_HOST}:5432/{PG_DB}",
     pool_pre_ping=True,
 )
 
