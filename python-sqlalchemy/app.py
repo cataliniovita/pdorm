@@ -69,7 +69,7 @@ def vuln():
         return jsonify(query=str(sql), error=str(e)), 500
 
 
-@app.get("/vuln_pg")
+@app.get("/vuln-pg")
 def vuln_pg():
     name = request.args.get("name", "")
     col = request.args.get("col", "")
