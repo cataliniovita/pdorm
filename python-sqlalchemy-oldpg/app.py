@@ -55,7 +55,7 @@ def vuln():
     except Exception as e:
         return jsonify(query=str(sql), error=str(e)), 500
 
-@app.get('/vuln_pg')
+@app.get('/vuln-pg')
 def vuln_pg():
     name = request.args.get('name', '')
     col = request.args.get('col', '')
@@ -65,8 +65,9 @@ def vuln_pg():
     sql = text(f"SELECT {col} FROM users WHERE name = :name")
     try:
         with engine_pg.connect() as conn:
-            rows = conn.execute(sql, { 'name': name }).mappings().all()
-        return jsonify(query=str(sql), rows=list(rows)) ### Change this
+            rows = conn.execute(sql, { "name": name }).all()
+            rows = [list(r) for r in rows]
+        return jsonify(query=str(sql), rows=rows)
     except Exception as e:
         return jsonify(query=str(sql), error=str(e)), 500
 
