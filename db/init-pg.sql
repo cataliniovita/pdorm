@@ -1,3 +1,25 @@
+-- Drop and recreate the demo Postgres database to mirror MySQL init.sql
+DO $$
+BEGIN
+  -- terminate existing connections if DB exists
+  IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'demopg') THEN
+    PERFORM pg_terminate_backend(pid)
+    FROM pg_stat_activity
+    WHERE datname = 'demopg' AND pid <> pg_backend_pid();
+  END IF;
+END $$;
+
+DROP DATABASE IF EXISTS demopg;
+CREATE DATABASE demopg;
+
+-- Ensure low-priv user exists
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app') THEN
+    CREATE ROLE app WITH LOGIN PASSWORD 'apppass';
+  END IF;
+END $$;
+
 \connect demopg
 
 -- Clean slate (drop in dependency order)
@@ -48,24 +70,13 @@ INSERT INTO products (sku, title, qty) VALUES
 CREATE OR REPLACE VIEW v_users_emails AS
 SELECT id, name, email FROM users;
 
--- Create low-priv app user (idempotent)
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app') THEN
-    CREATE ROLE app WITH LOGIN PASSWORD 'apppass';
-  END IF;
-END $$;
-
--- Grant privileges roughly equivalent to MySQL's:
---   SELECT, INSERT, UPDATE, DELETE on all tables in demo.public
--- Plus required sequence privileges so INSERTs on IDENTITY columns work.
+-- Grants similar to MySQL perms for user 'app'
 GRANT CONNECT ON DATABASE demopg TO app;
-GRANT USAGE, CREATE ON SCHEMA public TO app;
-
+GRANT USAGE ON SCHEMA public TO app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app;
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO app;
 
--- Ensure future objects get the same grants
+-- Default privileges for future objects
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app;
 
