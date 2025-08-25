@@ -22,6 +22,14 @@ public class Server {
         String url = String.format("jdbc:mysql://%s:3306/%s?useUnicode=true&characterEncoding=utf8&useSSL=false", host, db);
         return DriverManager.getConnection(url, user, pass);
     }
+    static Connection getPgConn() throws Exception {
+        String host = Optional.ofNullable(System.getenv("PG_HOST")).orElse("pg");
+        String db = Optional.ofNullable(System.getenv("PG_DB")).orElse("demopg");
+        String user = Optional.ofNullable(System.getenv("PG_USER")).orElse("app");
+        String pass = Optional.ofNullable(System.getenv("PG_PASS")).orElse("apppass");
+        String url = String.format("jdbc:postgresql://%s:5432/%s", host, db);
+        return DriverManager.getConnection(url, user, pass);
+    }
 
     static Map<String, String> parseQuery(URI uri) {
         Map<String, String> q = new HashMap<>();
@@ -82,6 +90,24 @@ public class Server {
             String sanitized = col.replace("`", "``");
             String sql = "SELECT `" + sanitized + "` AS val FROM fruit WHERE name = ?";
             try (Connection c = getConn(); PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setString(1, name);
+                ResultSet rs = ps.executeQuery();
+                List<String> vals = new ArrayList<>();
+                while (rs.next()) { vals.add(rs.getString("val")); }
+                writeJson(ex, 200, "{\"query\":\"" + jsonEscape(sql) + "\",\"rows\":" + vals.toString() + "}");
+            } catch (Exception e) {
+                writeJson(ex, 500, "{\"query\":\"" + jsonEscape(sql) + "\",\"error\":\"" + jsonEscape(e.getMessage()) + "\"}");
+            }
+        });
+
+        server.createContext("/vuln-pg", ex -> {
+            Map<String, String> q = parseQuery(ex.getRequestURI());
+            String name = q.getOrDefault("name", "");
+            String col = q.getOrDefault("col", "name");
+            // VULN: naive double-quote escaping for Postgres identifiers
+            String sanitized = col.replace("\"", "\"\"");
+            String sql = "SELECT \"" + sanitized + "\" AS val FROM users WHERE name = ?";
+            try (Connection c = getPgConn(); PreparedStatement ps = c.prepareStatement(sql)) {
                 ps.setString(1, name);
                 ResultSet rs = ps.executeQuery();
                 List<String> vals = new ArrayList<>();

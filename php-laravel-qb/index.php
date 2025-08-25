@@ -74,6 +74,35 @@ if ($uri === '/vuln') {
     exit;
 }
 
+if ($uri === '/vuln-pg') {
+    // Create a transient connection to Postgres using Capsule for this call
+    $pg = new Capsule();
+    $pg->addConnection([
+        'driver' => 'pgsql',
+        'host' => getenv('PG_HOST') ?: 'pg',
+        'database' => getenv('PG_DB') ?: 'demopg',
+        'username' => getenv('PG_USER') ?: 'app',
+        'password' => getenv('PG_PASS') ?: 'apppass',
+        'charset' => 'utf8',
+    ], 'pg');
+    $name = $_GET['name'] ?? '';
+    $col = (string)($_GET['col'] ?? 'name');
+    // VULN: naive double-quote escaping for identifier
+    $sanitized = '"' . str_replace('"', '""', $col) . '"';
+    try {
+        $qb = $pg::connection('pg')->table('users')
+            ->selectRaw("{$sanitized} AS val")
+            ->where('name', '=', $name);
+        $sql = $qb->toSql();
+        $bindings = $qb->getBindings();
+        $rows = $qb->get();
+        json_response(['sql' => $sql, 'bindings' => $bindings, 'rows' => $rows]);
+    } catch (Throwable $e) {
+        json_response(['error' => $e->getMessage()], 500);
+    }
+    exit;
+}
+
 json_response(['error' => 'not found'], 404);
 
 

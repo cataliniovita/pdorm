@@ -43,6 +43,20 @@ public class Controller {
             return Map.of("query", sql, "error", e.getMessage());
         }
     }
+
+    @GetMapping("/vuln-pg")
+    public Map<String, Object> vulnPg(@RequestParam(defaultValue = "") String name,
+                                      @RequestParam(defaultValue = "name") String col) {
+        // VULN: naive double-quote escaping for Postgres identifiers
+        String sanitized = col.replace("\"", "\"\"");
+        String sql = "SELECT \"" + sanitized + "\" AS val FROM users WHERE name = ?";
+        try {
+            List<Map<String,Object>> rows = jdbc.queryForList(sql, name);
+            return Map.of("query", sql, "rows", rows);
+        } catch (Exception e) {
+            return Map.of("query", sql, "error", e.getMessage());
+        }
+    }
 }
 
 
