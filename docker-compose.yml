@@ -193,6 +193,18 @@ services:
       PG_DB: demopg
       PG_USER: app
       PG_PASS: apppass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    ports:
+      - "5003:5000"
+    networks:
+      - internal
   python-sqlalchemy-async:
     build: ./python-sqlalchemy-async
     environment:
